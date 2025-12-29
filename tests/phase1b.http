@@ -1,0 +1,263 @@
+############################################################
+# Phase 1B – Payment Intent POC
+# Archivo: tests/phase1b.http
+#
+# Uso:
+# - Ejecutar cada request manualmente
+# - Copiar el intentId del CREATE
+# - Pegar el valor en la variable @intentId
+#
+# Requiere:
+# - API en http://localhost:5000
+# - Worker corriendo
+# - DB migrada
+############################################################
+
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+# ----------------------------------------------------------
+# VARIABLES (editar a mano cuando corresponda)
+# ----------------------------------------------------------
+
+# Reemplazar luego de crear un intent
+@intentId = pi_REEMPLAZAR_ID
+
+############################################################
+# 0. HEALTH CHECK
+############################################################
+
+###
+GET {{baseUrl}}/api/health
+Accept: */*
+
+############################################################
+# 1. CREATE PAYMENT INTENT
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents
+Content-Type: {{contentType}}
+Accept: */*
+
+{
+  "amount": 10000,
+  "currency": "ARS",
+  "description": "Pago de prueba Phase 1B"
+}
+
+# 👉 Copiar el "id" del response y pegarlo en @intentId
+
+############################################################
+# 2. GET PAYMENT INTENT (Created)
+############################################################
+
+###
+GET {{baseUrl}}/api/payment-intents/{{intentId}}
+Accept: */*
+
+############################################################
+# 3. CONFIRM PAYMENT INTENT
+# Estado esperado: PendingConfirmation
+# Se setea expiresAt = now + 120s
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/confirm
+Accept: */*
+
+############################################################
+# 4. GET PAYMENT INTENT (PendingConfirmation)
+############################################################
+
+###
+GET {{baseUrl}}/api/payment-intents/{{intentId}}
+Accept: */*
+
+############################################################
+# 5. CAPTURE PAYMENT INTENT (flujo feliz)
+# Estado esperado: Captured
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/capture
+Accept: */*
+
+############################################################
+# 6. GET PAYMENT INTENT (Captured)
+############################################################
+
+###
+GET {{baseUrl}}/api/payment-intents/{{intentId}}
+Accept: */*
+
+############################################################
+# 7. INVALID: CAPTURE AGAIN (Captured → Captured)
+# Esperado: 409 Conflict
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/capture
+Accept: */*
+
+############################################################
+# 8. INVALID: REVERSE AFTER CAPTURE
+# Esperado: 409 Conflict
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/reverse
+Accept: */*
+
+############################################################
+# ----------------------------------------------------------
+# FLUJO ALTERNATIVO: EXPIRACIÓN
+# ----------------------------------------------------------
+############################################################
+
+# Crear un NUEVO intent para este flujo
+
+###
+POST {{baseUrl}}/api/payment-intents
+Content-Type: {{contentType}}
+Accept: */*
+
+{
+  "amount": 25000,
+  "currency": "ARS",
+  "description": "Intent para probar expiración"
+}
+
+# 👉 Copiar el nuevo id y reemplazar @intentId
+
+############################################################
+# CONFIRMAR (queda PendingConfirmation)
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/confirm
+Accept: */*
+
+############################################################
+# ESPERAR 2+ MINUTOS
+# (Worker debería expirar automáticamente)
+############################################################
+
+############################################################
+# GET PAYMENT INTENT (Expired)
+############################################################
+
+###
+GET {{baseUrl}}/api/payment-intents/{{intentId}}
+Accept: */*
+
+############################################################
+# INVALID: CAPTURE AFTER EXPIRED
+# Esperado: 409 Conflict
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/capture
+Accept: */*
+
+############################################################
+# INVALID: REVERSE AFTER EXPIRED
+# Esperado: 409 Conflict
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/reverse
+Accept: */*
+
+############################################################
+# ----------------------------------------------------------
+# FLUJO: CREATED → REVERSE
+############################################################
+
+# Crear NUEVO intent
+
+###
+POST {{baseUrl}}/api/payment-intents
+Content-Type: {{contentType}}
+Accept: */*
+
+{
+  "amount": 5000,
+  "currency": "ARS",
+  "description": "Reverse desde Created"
+}
+
+# 👉 Copiar id y reemplazar @intentId
+
+############################################################
+# REVERSE DIRECTAMENTE (Created → Reversed)
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/reverse
+Accept: */*
+
+############################################################
+# GET PAYMENT INTENT (Reversed)
+############################################################
+
+###
+GET {{baseUrl}}/api/payment-intents/{{intentId}}
+Accept: */*
+
+############################################################
+# INVALID: CONFIRM AFTER REVERSE
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/confirm
+Accept: */*
+
+############################################################
+# INVALID: CAPTURE AFTER REVERSE
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/capture
+Accept: */*
+
+############################################################
+# ----------------------------------------------------------
+# FLUJO: CONFIRM TWICE
+############################################################
+
+# Crear NUEVO intent
+
+###
+POST {{baseUrl}}/api/payment-intents
+Content-Type: {{contentType}}
+Accept: */*
+
+{
+  "amount": 8000,
+  "currency": "ARS",
+  "description": "Confirm twice test"
+}
+
+# 👉 Copiar id y reemplazar @intentId
+
+############################################################
+# CONFIRM 1 (válido)
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/confirm
+Accept: */*
+
+############################################################
+# CONFIRM 2 (inválido)
+# Esperado: 409 Conflict
+############################################################
+
+###
+POST {{baseUrl}}/api/payment-intents/{{intentId}}/confirm
+Accept: */*
+
+############################################################
+# FIN – Phase 1B
+############################################################

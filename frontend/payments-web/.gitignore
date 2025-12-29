@@ -1,0 +1,133 @@
+############################################
+# OS / Editor / IDE
+############################################
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# JetBrains (Rider/IntelliJ)
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+
+############################################
+# .NET / C# build artifacts
+############################################
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+**/BenchmarkDotNet.Artifacts/
+
+# NuGet
+**/packages/
+*.nupkg
+*.snupkg
+# Optional: keep if you want deterministic restore (many teams keep it)
+# packages.lock.json
+
+############################################
+# ASP.NET / logs
+############################################
+**/Logs/
+**/*.log
+**/*.tmp
+
+############################################
+# Entity Framework (si querés evitar basura local)
+############################################
+# Si ustedes generan migraciones y se versionan, NO ignores Migrations.
+# Si querés versionarlas (recomendado), dejalo comentado:
+# **/Migrations/
+
+############################################
+# Node / Next.js
+############################################
+# dependencies
+**/node_modules/
+
+# Next.js build output
+**/.next/
+**/out/
+
+# Turbopack cache
+**/.turbo/
+
+# general caches
+**/.cache/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env files (NO versionar secretos)
+**/.env
+**/.env.*
+!**/.env.example
+
+############################################
+# Docker / local volumes / compose overrides
+############################################
+# Si tenés archivos override locales
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Volúmenes locales (si los creás como carpetas)
+**/docker-data/
+**/volumes/
+**/.docker/
+
+############################################
+# Secrets / certs / keys (crítico)
+############################################
+**/*secrets*
+**/*secret*
+**/*.pfx
+**/*.p12
+**/*.pem
+**/*.key
+**/*.crt
+**/*.cer
+
+############################################
+# Coverage
+############################################
+**/coverage/
+**/*.coverage
+**/*.coveragexml
+
+############################################
+# Misc
+############################################
+# Archivos generados por herramientas
+*.orig
+*.rej
+
+# ZIPs y artifacts grandes (si querés evitar commits accidentales)
+*.zip
+*.7z
+*.rar
