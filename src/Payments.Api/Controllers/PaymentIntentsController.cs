@@ -43,6 +43,31 @@ public class PaymentIntentsController : ControllerBase
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAllPaymentIntents([FromQuery] string? status = null)
+    {
+        _logger.LogInformation("Getting all payment intents (status filter: {Status})", status ?? "all");
+
+        // Parsear status si se proveyó
+        PaymentIntentStatus? statusFilter = null;
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (Enum.TryParse<PaymentIntentStatus>(status, ignoreCase: true, out var parsedStatus))
+            {
+                statusFilter = parsedStatus;
+            }
+            else
+            {
+                return BadRequest(new { error = $"Invalid status value: {status}. Valid values: Created, PendingConfirmation, Captured, Reversed, Expired" });
+            }
+        }
+
+        var intents = await _paymentIntentService.GetAllAsync(statusFilter);
+        var responses = intents.Select(MapToResponse).ToList();
+
+        return Ok(responses);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPaymentIntent(string id)
     {

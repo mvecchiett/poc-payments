@@ -53,6 +53,26 @@ public class PaymentIntentService : IPaymentIntentService
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    public async Task<IEnumerable<PaymentIntent>> GetAllAsync(PaymentIntentStatus? status = null)
+    {
+        var query = _context.PaymentIntents.AsQueryable();
+
+        // Filtrar por status si se especifica
+        if (status.HasValue)
+        {            query = query.Where(p => p.Status == status.Value);
+        }
+
+        // Ordenar por fecha de creación descendente (más recientes primero)
+        var intents = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+
+        _logger.LogInformation("Retrieved {Count} payment intents (status filter: {Status})", 
+            intents.Count, status?.ToString() ?? "all");
+
+        return intents;
+    }
+
     public async Task<PaymentIntent> ConfirmAsync(string id)
     {
         var intent = await GetByIdAsync(id);
