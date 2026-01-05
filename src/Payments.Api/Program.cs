@@ -13,6 +13,17 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configurar CORS para permitir requests desde el frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Configurar DbContext con Postgres
 // IMPORTANTE: MigrationsAssembly apunta a Payments.Api donde están las migraciones
 builder.Services.AddDbContext<PaymentsDbContext>(options =>
@@ -31,6 +42,9 @@ builder.Logging.AddDebug();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// Habilitar CORS
+app.UseCors("AllowFrontend");
+
 // Swagger habilitado en todos los ambientes para el POC
 app.UseSwagger();
 app.UseSwaggerUI(c =>
