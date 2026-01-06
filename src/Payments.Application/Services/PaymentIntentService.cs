@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Payments.Application.Data;
+using Payments.Application.Validation;
 using Payments.Shared.Models;
 
 namespace Payments.Application.Services;
@@ -28,6 +29,16 @@ public class PaymentIntentService : IPaymentIntentService
         {
             throw new InvalidOperationException("Amount must be greater than zero");
         }
+
+        // Validación de negocio: código de moneda válido
+        if (!CurrencyValidator.IsValid(currency))
+        {
+            throw new InvalidOperationException(
+                $"Invalid currency code: '{currency}'. {CurrencyValidator.GetValidCurrenciesMessage()}");
+        }
+
+        // Normalizar a uppercase
+        currency = CurrencyValidator.Normalize(currency);
 
         var intent = new PaymentIntent
         {

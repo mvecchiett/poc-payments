@@ -23,6 +23,12 @@ public class PaymentIntentsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreatePaymentIntent([FromBody] CreatePaymentIntentRequest request)
     {
+        // Validar ModelState (Data Annotations del DTO)
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         try
         {
             _logger.LogInformation("Creating payment intent for amount: {Amount} {Currency}", 
@@ -39,6 +45,14 @@ public class PaymentIntentsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning(ex, "Invalid operation creating payment intent");
+            
+            // Determinar si es error de validación (400) o conflicto de estado (409)
+            if (ex.Message.Contains("Invalid currency") || 
+                ex.Message.Contains("Amount must be"))
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            
             return Conflict(new { error = ex.Message });
         }
     }
