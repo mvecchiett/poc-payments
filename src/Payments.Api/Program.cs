@@ -57,3 +57,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Hacer Program accesible para tests de integración
+public partial class Program { }
